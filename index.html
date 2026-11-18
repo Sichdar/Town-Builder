@@ -48,6 +48,23 @@
     }
     #hint.gone { opacity: 0; }
 
+    #hud {
+      position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top)); transform: translateX(-50%);
+      display: flex; gap: 8px; pointer-events: none; font-weight: 700; font-size: 17px; color: #3a2a14;
+    }
+    #hud .pill {
+      background: rgba(255,248,230,0.92); border-radius: 18px; padding: 6px 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    #hud .ico { width: 16px; height: 16px; border-radius: 4px; display: inline-block; }
+    #hud .ico.wood { background: #7a4a24; border-radius: 8px / 5px; }
+    #hud .ico.stone { background: #a9acb1; }
+    #full {
+      position: fixed; left: 50%; top: calc(56px + env(safe-area-inset-top)); transform: translateX(-50%) scale(0.8);
+      background: #d9442b; color: #fff; font-weight: 800; font-size: 15px; padding: 4px 12px; border-radius: 12px;
+      opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; white-space: nowrap;
+    }
+    #full.on { opacity: 1; transform: translateX(-50%) scale(1); }
     #version {
       position: fixed; right: calc(8px + env(safe-area-inset-right)); bottom: calc(6px + env(safe-area-inset-bottom));
       color: rgba(255,255,255,0.7); font-size: 11px; pointer-events: none;
@@ -58,6 +75,12 @@
   <canvas id="game"></canvas>
   <div id="stick"><div id="knob"></div></div>
   <div id="hint">Drag anywhere to walk</div>
+  <div id="hud">
+    <div class="pill"><span class="ico wood"></span><span id="wood">0</span></div>
+    <div class="pill"><span class="ico stone"></span><span id="stone">0</span></div>
+    <div class="pill">🎒 <span id="load">0/10</span></div>
+  </div>
+  <div id="full">Back is full!</div>
   <div id="version"></div>
   <script type="module" src="src/main.js"></script>
 </body>

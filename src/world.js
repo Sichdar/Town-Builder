@@ -1,7 +1,7 @@
-// The ground and the scenery (trees and rocks you can't gather yet; that's M2).
+// The ground and the scenery: trees (wood) and rocks (stone) you can gather from.
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
-import { makeTree, makeRock } from './models.js';
+import { makeTree, makeRock, makeStump, makePebbles } from './models.js';
 
 // Small seeded random generator so the map is the same every time.
 function rng(seed) {
@@ -17,8 +17,10 @@ function rng(seed) {
 
 export function buildWorld(scene) {
   const W = CONFIG.world;
+  const G = CONFIG.gather;
   const half = W.size / 2;
   const obstacles = []; // { x, z, r } circles the villager can't walk through
+  const nodes = [];     // trees and rocks you can gather from (see gather.js)
 
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(W.size, W.size),
@@ -38,7 +40,7 @@ export function buildWorld(scene) {
   scene.add(edge);
 
   const rand = rng(W.seed);
-  const place = (count, make, radius) => {
+  const place = (count, type, make, makeLeftover, radius, amount) => {
     let tries = 0;
     let placed = 0;
     while (placed < count && tries < count * 30) {
@@ -52,12 +54,18 @@ export function buildWorld(scene) {
       obj.position.set(x, 0, z);
       obj.rotation.y = rand() * Math.PI * 2;
       scene.add(obj);
-      obstacles.push({ x, z, r: radius * scale });
+      const leftover = makeLeftover(scale);
+      leftover.position.set(x, 0, z);
+      leftover.visible = false;
+      scene.add(leftover);
+      const obstacle = { x, z, r: radius * scale };
+      obstacles.push(obstacle);
+      nodes.push({ type, obj, leftover, obstacle, x, z, r: obstacle.r, scale, amount, max: amount, regrowIn: 0, shake: 0, grow: 1 });
       placed++;
     }
   };
-  place(W.trees, makeTree, 0.35);
-  place(W.rocks, makeRock, 0.6);
+  place(W.trees, 'wood', makeTree, makeStump, 0.35, G.woodPerTree);
+  place(W.rocks, 'stone', makeRock, makePebbles, 0.6, G.stonePerRock);
 
-  return { half, obstacles };
+  return { half, obstacles, nodes };
 }

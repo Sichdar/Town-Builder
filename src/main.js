@@ -4,6 +4,7 @@ import { CONFIG } from './config.js';
 import { Joystick } from './joystick.js';
 import { buildWorld } from './world.js';
 import { Player } from './player.js';
+import { Gatherer } from './gather.js';
 
 const canvas = document.getElementById('game');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -28,11 +29,31 @@ const camera = new THREE.PerspectiveCamera(C.fov, 1, 0.1, 200);
 
 const world = buildWorld(scene);
 const player = new Player(scene, world);
+const gatherer = new Gatherer(scene, world, player);
 const joystick = new Joystick(document.getElementById('stick'), document.getElementById('knob'));
 
 const hint = document.getElementById('hint');
 joystick.onFirstMove = () => hint.classList.add('gone');
 document.getElementById('version').textContent = CONFIG.version;
+
+// Counter at the top: what you carry, and how full your back is.
+const hud = {
+  wood: document.getElementById('wood'),
+  stone: document.getElementById('stone'),
+  load: document.getElementById('load'),
+  full: document.getElementById('full'),
+};
+function showLoad() {
+  hud.wood.textContent = gatherer.count('wood');
+  hud.stone.textContent = gatherer.count('stone');
+  hud.load.textContent = `${gatherer.carried.length}/${CONFIG.gather.stackMax}`;
+  hud.full.classList.toggle('on', gatherer.full);
+}
+gatherer.onChange = showLoad;
+showLoad();
+
+// For testing from the browser console.
+window.game = { player, gatherer, world, camera, render: () => renderer.render(scene, camera) };
 
 // Camera starts in place, then follows smoothly.
 const offset = new THREE.Vector3(C.offset.x, C.offset.y, C.offset.z);
@@ -61,7 +82,9 @@ const target = new THREE.Vector3();
 renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.05);
 
-  player.update(dt, joystick.vector);
+  const input = joystick.vector;
+  player.update(dt, input);
+  gatherer.update(dt, input.x !== 0 || input.z !== 0);
 
   const k = 1 - Math.exp(-C.follow * dt);
   target.copy(player.position).setY(0).add(offset);

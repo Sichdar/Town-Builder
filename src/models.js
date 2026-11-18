@@ -13,6 +13,8 @@ const M = {
   leaves: mat(0x3f8f3a),
   leaves2: mat(0x4fa346),
   rock: mat(0x8d8f93),
+  stone: mat(0xa9acb1),
+  wood: mat(0xd9b27a),
 };
 
 function shadowAll(obj) {
@@ -69,5 +71,48 @@ export function makeRock(scale = 1) {
   const g = new THREE.Group();
   g.add(rock);
   g.scale.setScalar(scale);
+  return shadowAll(g);
+}
+
+// What's left of a cut tree or a used-up rock while it grows back.
+export function makeStump(scale = 1) {
+  const g = new THREE.Group();
+  const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.27, 0.25, 8), M.trunk);
+  stump.position.y = 0.125;
+  g.add(stump);
+  const top = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.02, 8), M.wood);
+  top.position.y = 0.26;
+  g.add(top);
+  g.scale.setScalar(scale);
+  return shadowAll(g);
+}
+
+export function makePebbles(scale = 1) {
+  const g = new THREE.Group();
+  for (const [x, z, s] of [[0.2, 0.1, 0.18], [-0.15, 0.2, 0.14], [0, -0.2, 0.16]]) {
+    const p = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), M.rock);
+    p.position.set(x, s * 0.6, z);
+    g.add(p);
+  }
+  g.scale.setScalar(scale);
+  return shadowAll(g);
+}
+
+// Pieces you carry on your back. Both are 0.2 tall so the stack is even.
+export const PIECE_HEIGHT = 0.2;
+
+const logGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.6, 8);
+logGeo.rotateZ(Math.PI / 2);
+export function makeLog() {
+  const g = new THREE.Group();
+  const a = new THREE.Mesh(logGeo, M.trunk);
+  g.add(a);
+  return shadowAll(g);
+}
+
+const stoneGeo = new THREE.BoxGeometry(0.5, PIECE_HEIGHT, 0.34);
+export function makeStone() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(stoneGeo, M.stone));
   return shadowAll(g);
 }
