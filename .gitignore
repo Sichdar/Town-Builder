@@ -1,0 +1,4 @@
+# Personal notes and Claude settings stay on this PC (the repo is public)
+project-log*.md
+.claude/
+backups/
