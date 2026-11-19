@@ -22,6 +22,7 @@ export class Joystick {
 
   down(e) {
     if (this.pointerId !== null) return;
+    if (e.target.closest && e.target.closest('.ui')) return; // buttons and panels, not walking
     e.preventDefault();
     this.pointerId = e.pointerId;
     this.origin = { x: e.clientX, y: e.clientY };

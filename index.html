@@ -85,7 +85,7 @@
     .ico.coin { background: radial-gradient(circle at 35% 35%, #fff2a8, #f2b705 60%, #b78400); border-radius: 50%; }
     #coins {
       position: fixed; left: calc(10px + env(safe-area-inset-left)); top: calc(56px + env(safe-area-inset-top));
-      pointer-events: none; display: flex; align-items: center; gap: 6px;
+      display: flex; align-items: center; gap: 6px;
     }
     #coins.hide { display: none; }
     .site-label .small { font-size: 11px; opacity: 0.75; display: flex; align-items: center; justify-content: center; gap: 3px; }
@@ -98,6 +98,39 @@
       position: fixed; right: calc(8px + env(safe-area-inset-right)); bottom: calc(6px + env(safe-area-inset-bottom));
       color: rgba(255,255,255,0.7); font-size: 11px; pointer-events: none;
     }
+    /* M5: buttons and panels */
+    .ui { pointer-events: auto; }
+    .btn { cursor: pointer; }
+    .btn:active { transform: scale(0.94); }
+    .shop-tag { background: #2e8b3a; color: #fff; font-size: 12px; padding: 2px 7px; border-radius: 9px; }
+    .panel {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; align-items: flex-start; justify-content: center;
+      padding: calc(110px + env(safe-area-inset-top)) 16px 16px; box-sizing: border-box; z-index: 10; touch-action: manipulation;
+    }
+    .panel.on { display: flex; }
+    .panel .box {
+      background: #fff8e6; border-radius: 18px; width: 100%; max-width: 380px; max-height: 80vh; overflow-y: auto;
+      padding: 12px 14px 14px; box-sizing: border-box; color: #3a2a14; box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    }
+    .panel .head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 20px; }
+    .panel .head b { flex: 1; }
+    .panel .head .pill { box-shadow: none; background: #f0e2c0; font-size: 16px; padding: 4px 10px; }
+    .panel button {
+      font: inherit; font-weight: 800; font-size: 15px; border: 0; border-radius: 12px; padding: 9px 12px; min-height: 42px;
+      background: #2e8b3a; color: #fff; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; cursor: pointer;
+    }
+    .panel button:disabled { background: #bdb3a0; }
+    .panel button.close { background: #d9442b; padding: 6px 12px; }
+    .panel button[data-drop] { background: #c0702b; }
+    .panel .row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid #ead9b4; }
+    .panel .big { font-size: 26px; width: 34px; text-align: center; display: flex; justify-content: center; }
+    .panel .big .ico { width: 22px; height: 22px; }
+    .panel .what { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .panel .what small { font-size: 13px; opacity: 0.75; }
+    .pips { display: flex; gap: 3px; margin-top: 4px; }
+    .pips i { width: 14px; height: 6px; border-radius: 3px; background: #e0d0ac; }
+    .pips i.on { background: #2e8b3a; }
+    .panel .empty, .panel .note { margin: 8px 0 0; font-size: 13px; opacity: 0.7; text-align: center; }
   </style>
 </head>
 <body>
@@ -109,14 +142,22 @@
     <div class="pill" data-type="stone"><span class="ico stone"></span><span>0</span></div>
     <div class="pill hide" data-type="plank"><span class="ico plank"></span><span>0</span></div>
     <div class="pill hide" data-type="block"><span class="ico block"></span><span>0</span></div>
-    <div class="pill">🎒 <span id="load">0/10</span></div>
+    <div class="pill ui btn" id="bagBtn">🎒 <span id="load">0/10</span></div>
   </div>
-  <div id="coins" class="pill hide"><span class="ico coin"></span><span id="coinCount">0</span>
-  </div>
+  <div id="coins" class="pill hide ui btn"><span class="ico coin"></span><span id="coinCount">0</span><span class="shop-tag">Shop</span></div>
   <div id="full">Back is full!</div>
   <div id="labels"></div>
   <div id="toast"></div>
   <div id="version"></div>
+  <div id="shop" class="panel ui"><div class="box">
+    <div class="head"><b>Upgrades</b><span class="pill have"></span><button class="close">✕</button></div>
+    <div class="list"></div>
+  </div></div>
+  <div id="bag" class="panel ui"><div class="box">
+    <div class="head"><b>Backpack</b><span class="pill have"></span><button class="close">✕</button></div>
+    <div class="list"></div>
+    <p class="note">Dropped pieces are gone for good.</p>
+  </div></div>
   <script type="module" src="src/main.js"></script>
 </body>
 </html>

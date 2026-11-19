@@ -15,6 +15,7 @@ export class Gatherer {
     this.timer = 0;
     this.carried = [];   // 'wood' / 'stone' / 'plank' / 'block', bottom to top (includes pieces still flying)
     this.flying = [];    // { mesh, from, t }
+    this.speedFor = { wood: 1, stone: 1 }; // time multiplier per type (upgrades make it smaller)
     this.onChange = null;
 
     // The stack sits on the villager's back (the villager faces +z, so the back is -z).
@@ -41,9 +42,10 @@ export class Gatherer {
     }
 
     if (best && !this.full) {
+      const every = G.every * (this.speedFor[best.type] ?? 1);
       this.timer += dt;
-      if (this.timer >= G.every) {
-        this.timer -= G.every;
+      if (this.timer >= every) {
+        this.timer = Math.min(this.timer - every, every);
         this.take(best);
       }
     } else {

@@ -1,6 +1,6 @@
 // All the numbers that tune how the game feels. Change values here, not in the code.
 export const CONFIG = {
-  version: 'v0.4 (M4)',
+  version: 'v0.5 (M5)',
 
   player: {
     speed: 6,          // metres per second at full joystick
@@ -70,4 +70,17 @@ export const CONVERTERS = {
   market:  { prices: { wood: 1, stone: 1, plank: 3, block: 3 } }, // coins paid per piece
   padSize: 2.2,      // the in and out pads
   padOffset: 3,      // metres from the building's middle to each pad
+};
+
+// M5 upgrades, bought with coins. Each level costs the next number in "costs".
+export const UPGRADES = {
+  toolStep: 0.8,   // each axe or pick level: gathering takes 80% of the time it did
+  bagStep: 4,      // each backpack level: room for 4 more pieces
+  bootsStep: 0.1,  // each boots level: walk 10% faster than at the start
+  list: [
+    { id: 'axe',   name: 'Sharper axe',      icon: '🪓', text: 'Cut wood faster',     costs: [10, 25, 50, 90, 150] },
+    { id: 'pick',  name: 'Stronger pick',    icon: '⛏️', text: 'Break stone faster',  costs: [10, 25, 50, 90, 150] },
+    { id: 'bag',   name: 'Bigger backpack',  icon: '🎒', text: 'Carry 4 more pieces', costs: [15, 35, 70, 120, 200] },
+    { id: 'boots', name: 'Faster boots',     icon: '👢', text: 'Walk 10% faster',     costs: [12, 30, 60, 100, 160] },
+  ],
 };
