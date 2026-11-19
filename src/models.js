@@ -137,7 +137,7 @@ export function ghostOf(model) {
 }
 
 // The marked patch you walk onto to deliver.
-export function makePad(size = 3) {
+export function makePad(size = 3, edge = M3.padEdge) {
   const g = new THREE.Group();
   const base = new THREE.Mesh(new THREE.BoxGeometry(size, 0.04, size), M3.pad);
   base.position.y = 0.02;
@@ -145,7 +145,7 @@ export function makePad(size = 3) {
   g.add(base);
   const t = 0.12;
   for (const [x, z, w, d] of [[0, size / 2, size, t], [0, -size / 2, size, t], [size / 2, 0, t, size], [-size / 2, 0, t, size]]) {
-    const e = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06, d), M3.padEdge);
+    const e = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06, d), edge);
     e.position.set(x, 0.03, z);
     g.add(e);
   }
@@ -235,4 +235,111 @@ export function makeArrow() {
   geo.rotateX(-Math.PI / 2); // lie flat, pointing toward -z
   const m = new THREE.Mesh(geo, M3.arrow);
   return m;
+}
+
+// ---- M4: planks, blocks and the buildings that make them ----
+
+const M4 = {
+  plank: mat(0xe0b878),
+  block: mat(0xcfd2d6),
+  shed: mat(0x9a6a3a),
+  shedRoof: mat(0x6b4426),
+  blade: mat(0xd8dde2),
+  masonWall: mat(0xb9bcc0),
+  awning1: mat(0xd94b3a),
+  awning2: mat(0xf3eee2),
+  padIn: mat(0x6fd06a),   // green edge: drop goods here
+  padOut: mat(0xffc93c),  // yellow edge: collect here
+};
+export const PAD_IN = M4.padIn;
+export const PAD_OUT = M4.padOut;
+
+// Two thin boards = one plank piece, 0.2 tall like the others.
+const boardGeo = new THREE.BoxGeometry(0.62, 0.085, 0.26);
+export function makePlank() {
+  const g = new THREE.Group();
+  for (const y of [-0.05, 0.05]) {
+    const b = new THREE.Mesh(boardGeo, M4.plank);
+    b.position.y = y;
+    g.add(b);
+  }
+  return shadowAll(g);
+}
+
+const blockGeo = new THREE.BoxGeometry(0.4, PIECE_HEIGHT, 0.4);
+export function makeBlock() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(blockGeo, M4.block));
+  return shadowAll(g);
+}
+
+export function makeSawmill() {
+  const g = new THREE.Group();
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.2, 2.2), M4.shed);
+  floor.position.y = 0.1;
+  g.add(floor);
+  for (const [x, z] of [[-1.15, -0.95], [1.15, -0.95], [-1.15, 0.95], [1.15, 0.95]]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.18, 1.8, 0.18), M4.shed);
+    post.position.set(x, 1.0, z);
+    g.add(post);
+  }
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.0, 0.9, 4), M4.shedRoof);
+  roof.position.y = 2.3;
+  roof.rotation.y = Math.PI / 4;
+  roof.scale.set(1, 1, 0.85);
+  g.add(roof);
+  const table = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.5, 0.6), M4.plank);
+  table.position.y = 0.45;
+  g.add(table);
+  // The saw blade spins while it works (found by name in converters.js).
+  const blade = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.04, 16), M4.blade);
+  blade.rotation.x = Math.PI / 2;
+  blade.position.set(0, 0.8, 0);
+  blade.name = 'spinner';
+  g.add(blade);
+  return shadowAll(g);
+}
+
+export function makeMason() {
+  const g = new THREE.Group();
+  const walls = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.3, 2), M4.masonWall);
+  walls.position.y = 0.65;
+  g.add(walls);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.9, 1.0, 4), M3.roof);
+  roof.position.y = 1.8;
+  roof.rotation.y = Math.PI / 4;
+  roof.scale.set(1, 1, 0.85);
+  g.add(roof);
+  const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.9, 0.35), M.rock);
+  chimney.position.set(0.6, 2.1, -0.4);
+  g.add(chimney);
+  // A block on the workbench that bobs while it works.
+  const work = new THREE.Mesh(blockGeo, M4.block);
+  work.position.set(0, 0.25, 1.25);
+  work.name = 'bobber';
+  g.add(work);
+  return shadowAll(g);
+}
+
+export function makeMarket() {
+  const g = new THREE.Group();
+  const counter = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.9, 0.8), M4.shed);
+  counter.position.set(0, 0.45, 0.5);
+  g.add(counter);
+  for (const [x, z] of [[-1.15, -0.8], [1.15, -0.8], [-1.15, 0.8], [1.15, 0.8]]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.0, 0.14), M4.shed);
+    post.position.set(x, 1.0, z);
+    g.add(post);
+  }
+  // Striped awning.
+  for (let i = 0; i < 6; i++) {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.08, 2.0), i % 2 ? M4.awning2 : M4.awning1);
+    s.position.set(-1.05 + i * 0.42, 2.05, 0);
+    s.rotation.x = 0.15;
+    g.add(s);
+  }
+  const crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), M4.plank);
+  crate.position.set(-0.7, 1.15, 0.5);
+  g.add(crate);
+  return shadowAll(g);
 }

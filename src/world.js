@@ -72,7 +72,7 @@ export function buildWorld(scene) {
   // ---- Trees and rocks ----
   // Keep them off build sites, the start point and the path through the gate.
   const keepClear = [{ x: 0, z: 0, r: W.clearRadius }];
-  for (const s of SITES) keepClear.push({ x: s.x, z: s.z, r: DELIVER.padSize + 0.5 });
+  for (const s of SITES) keepClear.push({ x: s.x, z: s.z, r: s.clear || DELIVER.padSize + 0.5 });
   for (let z = fenceZ + 6; z > fenceZ - 6; z -= 2) keepClear.push({ x: 0, z, r: 3 });
 
   const rand = rng(W.seed);

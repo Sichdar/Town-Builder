@@ -2,10 +2,11 @@
 // When everything it needs is in, the building appears and the next site shows up.
 import * as THREE from 'three';
 import { SITES, DELIVER } from './config.js';
-import { makePad, makeHut, makeWell, ghostOf, makeArrow } from './models.js';
+import { makePad, makeHut, makeWell, makeSawmill, makeMason, makeMarket, ghostOf, makeArrow } from './models.js';
 
-const builders = { hut: makeHut, well: makeWell, gate: null }; // the gate is part of the fence (world.js)
-const ICON = { wood: '<span class="ico wood"></span>', stone: '<span class="ico stone"></span>' };
+import { ICON, placeLabel } from './ui.js';
+
+const builders = { hut: makeHut, well: makeWell, sawmill: makeSawmill, mason: makeMason, market: makeMarket, gate: null }; // the gate is part of the fence (world.js)
 const tmp = new THREE.Vector3();
 
 export class Sites {
@@ -173,23 +174,9 @@ export class Sites {
 
   // Counters float above each site that's waiting.
   placeLabels() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
     for (const s of this.list) {
-      const show = s.shown && !s.done;
-      if (show) {
-        tmp.set(s.def.x, 2.6, s.def.z).project(this.camera);
-        const on = tmp.z < 1 && Math.abs(tmp.x) < 1.2 && Math.abs(tmp.y) < 1.2;
-        s.label.style.display = on ? '' : 'none';
-        if (on) {
-          // Keep the counter fully on screen, even when its site is near the edge.
-          const lw = s.label.offsetWidth / 2 + 6;
-          const x = Math.max(lw, Math.min(w - lw, ((tmp.x + 1) / 2) * w));
-          s.label.style.transform = `translate(${x}px, ${((1 - tmp.y) / 2) * h}px) translate(-50%, -100%)`;
-        }
-      } else {
-        s.label.style.display = 'none';
-      }
+      if (s.shown && !s.done) placeLabel(s.label, s.def.x, 2.6, s.def.z, this.camera);
+      else s.label.style.display = 'none';
     }
   }
 

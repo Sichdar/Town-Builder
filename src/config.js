@@ -1,6 +1,6 @@
 // All the numbers that tune how the game feels. Change values here, not in the code.
 export const CONFIG = {
-  version: 'v0.3 (M3)',
+  version: 'v0.4 (M4)',
 
   player: {
     speed: 6,          // metres per second at full joystick
@@ -46,6 +46,10 @@ export const SITES = [
   { id: 'hut',  name: 'Woodcutter hut', x: 0,  z: 5,   needs: { wood: 10 },           builds: 'hut',  after: null },
   { id: 'gate', name: 'North gate',     x: 0,  z: -20, needs: { wood: 15, stone: 8 }, builds: 'gate', after: 'hut' },
   { id: 'well', name: 'Well',           x: -4, z: -31, needs: { stone: 12 },          builds: 'well', after: 'gate' },
+  // Buildings that turn one thing into another (see CONVERTERS below). They need room for two pads.
+  { id: 'sawmill', name: 'Sawmill', x: -9, z: 8,   needs: { wood: 20 },            builds: 'sawmill', after: 'well',    clear: 5.5 },
+  { id: 'mason',   name: 'Mason',   x: 9,  z: -34, needs: { stone: 15, plank: 6 }, builds: 'mason',   after: 'sawmill', clear: 5.5 },
+  { id: 'market',  name: 'Market',  x: 9,  z: 8,   needs: { plank: 8, block: 8 },  builds: 'market',  after: 'mason',   clear: 5.5 },
 ];
 
 export const DELIVER = {
@@ -57,4 +61,13 @@ export const DELIVER = {
 export const SAVE = {
   key: 'town-builder-save-v1', // where progress is kept on the phone
   every: 3,                    // seconds between automatic saves
+};
+
+// What the buildings do once built. Drop goods on the left pad (in), collect from the right pad (out).
+export const CONVERTERS = {
+  sawmill: { takes: 'wood',  makes: 'plank', every: 1.2, inMax: 20, outMax: 20 },
+  mason:   { takes: 'stone', makes: 'block', every: 1.5, inMax: 20, outMax: 20 },
+  market:  { prices: { wood: 1, stone: 1, plank: 3, block: 3 } }, // coins paid per piece
+  padSize: 2.2,      // the in and out pads
+  padOffset: 3,      // metres from the building's middle to each pad
 };

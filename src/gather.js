@@ -2,9 +2,9 @@
 // Cut trees and used rocks leave a stump or pebbles, then grow back.
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
-import { makeLog, makeStone, PIECE_HEIGHT } from './models.js';
+import { makeLog, makeStone, makePlank, makeBlock, PIECE_HEIGHT } from './models.js';
 
-const makers = { wood: makeLog, stone: makeStone };
+export const makers = { wood: makeLog, stone: makeStone, plank: makePlank, block: makeBlock };
 const tmp = new THREE.Vector3();
 
 export class Gatherer {
@@ -13,7 +13,7 @@ export class Gatherer {
     this.world = world;
     this.player = player;
     this.timer = 0;
-    this.carried = [];   // 'wood' / 'stone', bottom to top (includes pieces still flying)
+    this.carried = [];   // 'wood' / 'stone' / 'plank' / 'block', bottom to top (includes pieces still flying)
     this.flying = [];    // { mesh, from, t }
     this.onChange = null;
 
@@ -62,14 +62,8 @@ export class Gatherer {
   take(node) {
     node.amount--;
     node.shake = 0.25;
-    const type = node.type;
-    this.carried.push(type);
-
-    const mesh = makers[type]();
-    const h = type === 'wood' ? 2 : 0.6;
-    mesh.position.set(node.x, h * node.scale, node.z);
-    this.scene.add(mesh);
-    this.flying.push({ mesh, from: mesh.position.clone(), t: 0, slot: this.carried.length - 1 });
+    const h = node.type === 'wood' ? 2 : 0.6;
+    this.receive(node.type, tmp.set(node.x, h * node.scale, node.z));
 
     if (node.amount <= 0) {
       node.obj.visible = false;
@@ -77,6 +71,15 @@ export class Gatherer {
       node.obstacle.r = 0.25 * node.scale;
       node.regrowIn = CONFIG.gather.regrow;
     }
+  }
+
+  // A piece of "type" flies from a spot in the world onto your back (from a tree, rock or building).
+  receive(type, from) {
+    this.carried.push(type);
+    const mesh = makers[type]();
+    mesh.position.copy(from);
+    this.scene.add(mesh);
+    this.flying.push({ mesh, from: mesh.position.clone(), t: 0, slot: this.carried.length - 1 });
     if (this.onChange) this.onChange();
   }
 

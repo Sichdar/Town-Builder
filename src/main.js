@@ -6,6 +6,7 @@ import { buildWorld } from './world.js';
 import { Player } from './player.js';
 import { Gatherer } from './gather.js';
 import { Sites } from './sites.js';
+import { Converters } from './converters.js';
 import { loadSave, startSaving, resetSave } from './save.js';
 
 const canvas = document.getElementById('game');
@@ -39,15 +40,21 @@ joystick.onFirstMove = () => hint.classList.add('gone');
 document.getElementById('version').textContent = CONFIG.version;
 
 // Counter at the top: what you carry, and how full your back is.
+const pills = [...document.querySelectorAll('#hud .pill[data-type]')];
 const hud = {
-  wood: document.getElementById('wood'),
-  stone: document.getElementById('stone'),
   load: document.getElementById('load'),
   full: document.getElementById('full'),
+  coins: document.getElementById('coins'),
+  coinCount: document.getElementById('coinCount'),
 };
 function showLoad() {
-  hud.wood.textContent = gatherer.count('wood');
-  hud.stone.textContent = gatherer.count('stone');
+  for (const p of pills) {
+    const type = p.dataset.type;
+    const n = gatherer.count(type);
+    p.lastElementChild.textContent = n;
+    // Planks and blocks only show while you carry some, to keep the bar short on a phone.
+    if (type === 'plank' || type === 'block') p.classList.toggle('hide', n === 0);
+  }
   hud.load.textContent = `${gatherer.carried.length}/${CONFIG.gather.stackMax}`;
   hud.full.classList.toggle('on', gatherer.full);
 }
@@ -62,24 +69,36 @@ sites.onBuilt = (s) => {
   toast.classList.add('on');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('on'), 2200);
+  showCoins();
 };
+
+// Sawmill, mason and market: they work once built.
+const converters = new Converters(scene, player, gatherer, sites, camera);
+function showCoins() {
+  hud.coinCount.textContent = converters.coins;
+  hud.coins.classList.toggle('hide', converters.coins === 0 && !sites.get('market').done);
+}
+converters.onCoins = showCoins;
 
 const saved = loadSave();
 if (saved) {
   sites.restore(saved.sites);
+  converters.restore(saved.converters);
   gatherer.restore(saved.carried);
   if (Array.isArray(saved.pos)) player.position.set(+saved.pos[0] || 0, 0, +saved.pos[1] || 0);
   hint.classList.add('gone');
 }
 const saveNow = startSaving(() => ({
   sites: sites.save(),
+  converters: converters.save(),
   carried: gatherer.carried.slice(),
   pos: [+player.position.x.toFixed(2), +player.position.z.toFixed(2)],
 }));
 showLoad();
+showCoins();
 
 // For testing from the browser console.
-window.game = { player, gatherer, world, sites, camera, saveNow, reset: resetSave, render: () => renderer.render(scene, camera) };
+window.game = { player, gatherer, world, sites, converters, camera, saveNow, reset: resetSave, render: () => renderer.render(scene, camera) };
 
 // Camera starts in place, then follows smoothly.
 const offset = new THREE.Vector3(C.offset.x, C.offset.y, C.offset.z);
@@ -112,6 +131,7 @@ renderer.setAnimationLoop(() => {
   player.update(dt, input);
   gatherer.update(dt, input.x !== 0 || input.z !== 0);
   sites.update(dt);
+  converters.update(dt);
   world.update(dt);
 
   const k = 1 - Math.exp(-C.follow * dt);
