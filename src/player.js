@@ -1,4 +1,4 @@
-// The villager you control: walks, turns to face where it goes, bumps into trees and rocks.
+// The villager you control: walks, turns to face where it goes, bumps into trees, rocks and fences.
 import { CONFIG } from './config.js';
 import { makeVillager } from './models.js';
 
@@ -8,6 +8,7 @@ export class Player {
     this.mesh = makeVillager();
     scene.add(this.mesh);
     this.walkTime = 0;
+    this.prevZ = 0;
   }
 
   get position() { return this.mesh.position; }
@@ -16,6 +17,7 @@ export class Player {
     const P = CONFIG.player;
     const pos = this.mesh.position;
     const moving = input.x !== 0 || input.z !== 0;
+    this.prevZ = pos.z;
 
     if (moving) {
       pos.x += input.x * P.speed * dt;
@@ -50,8 +52,20 @@ export class Player {
         pos.z = o.z + (dz / d) * min;
       }
     }
-    const lim = this.world.half - r;
-    pos.x = Math.max(-lim, Math.min(lim, pos.x));
-    pos.z = Math.max(-lim, Math.min(lim, pos.z));
+
+    // Fences: can't cross, except through an open gate.
+    for (const f of this.world.fences) {
+      const inGap = f.open && Math.abs(pos.x - f.gapX) < f.gapHalf - r * 0.5;
+      if (inGap) continue;
+      const lim = r + 0.12;
+      if (Math.abs(pos.z - f.z) < lim) {
+        const side = this.prevZ >= f.z ? 1 : -1; // stay on the side you came from
+        pos.z = f.z + side * lim;
+      }
+    }
+
+    const b = this.world.bounds;
+    pos.x = Math.max(b.minX + r, Math.min(b.maxX - r, pos.x));
+    pos.z = Math.max(b.minZ + r, Math.min(b.maxZ - r, pos.z));
   }
 }

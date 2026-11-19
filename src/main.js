@@ -5,6 +5,8 @@ import { Joystick } from './joystick.js';
 import { buildWorld } from './world.js';
 import { Player } from './player.js';
 import { Gatherer } from './gather.js';
+import { Sites } from './sites.js';
+import { loadSave, startSaving, resetSave } from './save.js';
 
 const canvas = document.getElementById('game');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -50,10 +52,34 @@ function showLoad() {
   hud.full.classList.toggle('on', gatherer.full);
 }
 gatherer.onChange = showLoad;
+
+// Build sites, the toast when something is built, and saving.
+const sites = new Sites(scene, world, player, gatherer, camera);
+const toast = document.getElementById('toast');
+let toastTimer = 0;
+sites.onBuilt = (s) => {
+  toast.textContent = s.def.builds === 'gate' ? 'The north gate is open!' : `${s.def.name} built!`;
+  toast.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('on'), 2200);
+};
+
+const saved = loadSave();
+if (saved) {
+  sites.restore(saved.sites);
+  gatherer.restore(saved.carried);
+  if (Array.isArray(saved.pos)) player.position.set(+saved.pos[0] || 0, 0, +saved.pos[1] || 0);
+  hint.classList.add('gone');
+}
+const saveNow = startSaving(() => ({
+  sites: sites.save(),
+  carried: gatherer.carried.slice(),
+  pos: [+player.position.x.toFixed(2), +player.position.z.toFixed(2)],
+}));
 showLoad();
 
 // For testing from the browser console.
-window.game = { player, gatherer, world, camera, render: () => renderer.render(scene, camera) };
+window.game = { player, gatherer, world, sites, camera, saveNow, reset: resetSave, render: () => renderer.render(scene, camera) };
 
 // Camera starts in place, then follows smoothly.
 const offset = new THREE.Vector3(C.offset.x, C.offset.y, C.offset.z);
@@ -85,6 +111,8 @@ renderer.setAnimationLoop(() => {
   const input = joystick.vector;
   player.update(dt, input);
   gatherer.update(dt, input.x !== 0 || input.z !== 0);
+  sites.update(dt);
+  world.update(dt);
 
   const k = 1 - Math.exp(-C.follow * dt);
   target.copy(player.position).setY(0).add(offset);

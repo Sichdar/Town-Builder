@@ -1,6 +1,6 @@
 // All the numbers that tune how the game feels. Change values here, not in the code.
 export const CONFIG = {
-  version: 'v0.2 (M2)',
+  version: 'v0.3 (M3)',
 
   player: {
     speed: 6,          // metres per second at full joystick
@@ -35,5 +35,26 @@ export const CONFIG = {
     rocks: 14,
     clearRadius: 6,    // no trees or rocks this close to the start point
     seed: 7,           // same seed = same map every time
+    north: { depth: 32, trees: 35, rocks: 18 }, // the area behind the fence, opened by the gate
+    gateWidth: 4,      // metres of opening in the fence
   },
+};
+
+// Build sites, in the order they appear. "after" = shows up once that site is built.
+// x, z = where the site is (0, 0 is the start; north is negative z). "needs" = what it takes.
+export const SITES = [
+  { id: 'hut',  name: 'Woodcutter hut', x: 0,  z: 5,   needs: { wood: 10 },           builds: 'hut',  after: null },
+  { id: 'gate', name: 'North gate',     x: 0,  z: -20, needs: { wood: 15, stone: 8 }, builds: 'gate', after: 'hut' },
+  { id: 'well', name: 'Well',           x: -4, z: -31, needs: { stone: 12 },          builds: 'well', after: 'gate' },
+];
+
+export const DELIVER = {
+  every: 0.12,       // seconds between two pieces flying off your back into a site
+  padSize: 3,        // build site patch is padSize x padSize metres
+  fly: 0.3,          // seconds a piece takes to fly into the site
+};
+
+export const SAVE = {
+  key: 'town-builder-save-v1', // where progress is kept on the phone
+  every: 3,                    // seconds between automatic saves
 };

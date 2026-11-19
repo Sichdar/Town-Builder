@@ -129,4 +129,43 @@ export class Gatherer {
       }
     }
   }
+
+  // ---- Used by build sites (sites.js) and saving (save.js) ----
+
+  // Takes the highest piece on your back that the site wants. Returns { type, mesh } with the
+  // mesh moved into the world at the same spot, or null. Waits while pieces are still flying on.
+  takeFor(wants) {
+    if (this.flying.length) return null;
+    for (let i = this.carried.length - 1; i >= 0; i--) {
+      const type = this.carried[i];
+      if (!wants(type)) continue;
+      this.carried.splice(i, 1);
+      const mesh = this.stack.children[i];
+      this.scene.attach(mesh); // keeps its place on screen, now in the world
+      this.restack();
+      if (this.onChange) this.onChange();
+      return { type, mesh };
+    }
+    return null;
+  }
+
+  // Pieces above a removed one drop down to close the gap.
+  restack() {
+    this.stack.children.forEach((m, i) => {
+      m.position.set(0, i * PIECE_HEIGHT + PIECE_HEIGHT / 2, 0);
+      m.rotation.set(0, (i % 2) * 0.12 - 0.06, 0);
+    });
+  }
+
+  // Puts a saved stack back on your back, without the flying.
+  restore(types) {
+    if (!Array.isArray(types)) return;
+    for (const type of types.slice(0, CONFIG.gather.stackMax)) {
+      if (!makers[type]) continue;
+      this.carried.push(type);
+      this.stack.add(makers[type]());
+    }
+    this.restack();
+    if (this.onChange) this.onChange();
+  }
 }
