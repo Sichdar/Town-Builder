@@ -1,6 +1,6 @@
 {
-  "name": "Town Builder",
-  "short_name": "Town Builder",
+  "name": "Hearthfield",
+  "short_name": "Hearthfield",
   "description": "Gather, carry and build a medieval village into a town.",
   "start_url": "./",
   "scope": "./",

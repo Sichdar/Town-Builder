@@ -1,4 +1,4 @@
-# Game plan (working title: "Town building and mob fighting")
+# Game plan: Hearthfield
 
 Last updated: 18/11/2026 (S01-PLAN)
 

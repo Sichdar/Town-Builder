@@ -1,4 +1,4 @@
-# Town Builder (working name)
+# Hearthfield
 
 A 3D phone game in your browser: gather wood and stone, carry it on your back, deliver it to build sites, and grow a medieval village into a town. Later, defend it from raiders and monsters.
 

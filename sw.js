@@ -1,6 +1,6 @@
 // Offline support. Online: always fetch the newest files (so updates show at once) and keep a copy.
 // Offline: use the saved copy. Bump CACHE when the list of core files changes.
-const CACHE = 'town-builder-v4';
+const CACHE = 'town-builder-v5';
 const CORE = [
   './',
   './index.html',

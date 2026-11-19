@@ -59,7 +59,7 @@ export const DELIVER = {
 };
 
 export const SAVE = {
-  key: 'town-builder-save-v1', // where progress is kept on the phone
+  key: 'town-builder-save-v1', // where progress is kept on the phone (old name kept on purpose, so saves still load)
   every: 3,                    // seconds between automatic saves
 };
 
