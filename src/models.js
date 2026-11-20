@@ -22,10 +22,11 @@ function shadowAll(obj) {
   return obj;
 }
 
-export function makeVillager() {
+// tunic = colour for helpers (the player keeps blue).
+export function makeVillager(tunic = null) {
   const g = new THREE.Group();
 
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.5, 4, 12), M.tunic);
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 0.5, 4, 12), tunic === null ? M.tunic : mat(tunic));
   body.position.y = 0.6;
   g.add(body);
 
@@ -341,5 +342,38 @@ export function makeMarket() {
   const crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), M4.plank);
   crate.position.set(-0.7, 1.15, 0.5);
   g.add(crate);
+  return shadowAll(g);
+}
+
+// ---- M6 ----
+const M6 = {
+  lodgeWall: mat(0xe8d3a8),
+  lodgeRoof: mat(0x3f6fa0),
+  beam: mat(0x6b4426),
+};
+
+// Helper lodge: a long house with a blue roof and a bench out front.
+export function makeLodge() {
+  const g = new THREE.Group();
+  const walls = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.3, 1.9), M6.lodgeWall);
+  walls.position.y = 0.65;
+  g.add(walls);
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 2.8, 3), M6.lodgeRoof);
+  roof.rotation.z = Math.PI / 2;
+  roof.rotation.x = -Math.PI / 2;
+  roof.position.y = 1.71;
+  roof.scale.set(1, 1, 0.75);
+  g.add(roof);
+  for (const x of [-1.25, 1.25]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.3, 0.14), M6.beam);
+    post.position.set(x, 0.65, 0.96);
+    g.add(post);
+  }
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.85, 0.05), M3.door);
+  door.position.set(0, 0.43, 0.96);
+  g.add(door);
+  const bench = new THREE.Mesh(new THREE.BoxGeometry(1, 0.12, 0.3), M6.beam);
+  bench.position.set(0.85, 0.35, 1.3);
+  g.add(bench);
   return shadowAll(g);
 }

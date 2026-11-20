@@ -1,6 +1,6 @@
 // All the numbers that tune how the game feels. Change values here, not in the code.
 export const CONFIG = {
-  version: 'v0.5 (M5)',
+  version: 'v0.6 (M6)',
 
   player: {
     speed: 6,          // metres per second at full joystick
@@ -50,6 +50,8 @@ export const SITES = [
   { id: 'sawmill', name: 'Sawmill', x: -9, z: 8,   needs: { wood: 20 },            builds: 'sawmill', after: 'well',    clear: 5.5 },
   { id: 'mason',   name: 'Mason',   x: 9,  z: -34, needs: { stone: 15, plank: 6 }, builds: 'mason',   after: 'sawmill', clear: 5.5 },
   { id: 'market',  name: 'Market',  x: 9,  z: 8,   needs: { plank: 8, block: 8 },  builds: 'market',  after: 'mason',   clear: 5.5 },
+  // M6: hire helpers here (green pad), collect what they bring from the stockpile (yellow pad).
+  { id: 'lodge',   name: 'Helper lodge', x: -9, z: -8, needs: { wood: 15, plank: 10 }, builds: 'lodge', after: 'market', clear: 5.5 },
 ];
 
 export const DELIVER = {
@@ -83,4 +85,17 @@ export const UPGRADES = {
     { id: 'bag',   name: 'Bigger backpack',  icon: '🎒', text: 'Carry 4 more pieces', costs: [15, 35, 70, 120, 200] },
     { id: 'boots', name: 'Faster boots',     icon: '👢', text: 'Walk 10% faster',     costs: [12, 30, 60, 100, 160] },
   ],
+};
+
+// M6 helpers: villagers you hire at the lodge. They gather on their own and carry to the stockpile.
+export const HELPERS = {
+  costs: [20, 40, 70, 110], // coins for the 1st, 2nd, 3rd and 4th helper (4 at most)
+  jobs: {
+    wood:  { name: 'Woodcutter',    color: 0xd08a2e }, // orange shirt
+    stone: { name: 'Quarry worker', color: 0x7a4fa0 }, // purple shirt
+  },
+  speed: 3.5,       // metres per second (your boots don't count for them)
+  carry: 5,         // pieces a helper brings back each trip
+  pileMax: 40,      // most pieces the stockpile holds; helpers wait when it's full
+  gatherSlower: 1.6,// helpers gather this many times slower than you; your axe and pick upgrades help them too
 };

@@ -62,11 +62,15 @@ export class Gatherer {
   }
 
   take(node) {
-    node.amount--;
-    node.shake = 0.25;
+    this.chip(node);
     const h = node.type === 'wood' ? 2 : 0.6;
     this.receive(node.type, tmp.set(node.x, h * node.scale, node.z));
+  }
 
+  // One piece comes off a tree or rock (also used by helpers). Used up = stump or pebbles until it regrows.
+  chip(node) {
+    node.amount--;
+    node.shake = 0.25;
     if (node.amount <= 0) {
       node.obj.visible = false;
       node.leftover.visible = true;

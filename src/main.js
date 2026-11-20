@@ -8,6 +8,7 @@ import { Gatherer } from './gather.js';
 import { Sites } from './sites.js';
 import { Converters } from './converters.js';
 import { Upgrades } from './upgrades.js';
+import { Helpers } from './helpers.js';
 import { loadSave, startSaving, resetSave } from './save.js';
 
 const canvas = document.getElementById('game');
@@ -81,17 +82,24 @@ function showCoins() {
   hud.coinCount.textContent = converters.coins;
   hud.coins.classList.toggle('hide', converters.coins === 0 && !sites.get('market').done);
   if (upgrades) upgrades.refresh();
+  if (helpers) helpers.refresh();
 }
+let helpers = null;
 converters.onCoins = showCoins;
 
 // Upgrades shop (tap the coins) and the backpack panel (tap the backpack) to drop pieces.
 upgrades = new Upgrades(scene, player, gatherer, converters);
+
+// Helpers: hire them at the Helper lodge; they gather and fill the stockpile.
+helpers = new Helpers(scene, world, player, gatherer, sites, converters, camera);
+helpers.onOpen = () => joystick.release();
 
 const saved = loadSave();
 if (saved) {
   upgrades.restore(saved.upgrades); // first, so a bigger backpack fits the saved stack
   sites.restore(saved.sites);
   converters.restore(saved.converters);
+  helpers.restore(saved.helpers);
   gatherer.restore(saved.carried);
   if (Array.isArray(saved.pos)) player.position.set(+saved.pos[0] || 0, 0, +saved.pos[1] || 0);
   hint.classList.add('gone');
@@ -100,6 +108,7 @@ const saveNow = startSaving(() => ({
   sites: sites.save(),
   converters: converters.save(),
   upgrades: upgrades.save(),
+  helpers: helpers.save(),
   carried: gatherer.carried.slice(),
   pos: [+player.position.x.toFixed(2), +player.position.z.toFixed(2)],
 }));
@@ -107,7 +116,7 @@ showLoad();
 showCoins();
 
 // For testing from the browser console.
-window.game = { player, gatherer, world, sites, converters, upgrades, camera, saveNow, reset: resetSave, render: () => renderer.render(scene, camera) };
+window.game = { player, gatherer, world, sites, converters, upgrades, helpers, camera, saveNow, reset: resetSave, render: () => renderer.render(scene, camera) };
 
 // Camera starts in place, then follows smoothly.
 const offset = new THREE.Vector3(C.offset.x, C.offset.y, C.offset.z);
@@ -142,6 +151,7 @@ renderer.setAnimationLoop(() => {
   sites.update(dt);
   converters.update(dt);
   upgrades.update(dt);
+  helpers.update(dt);
   world.update(dt);
 
   const k = 1 - Math.exp(-C.follow * dt);

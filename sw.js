@@ -1,6 +1,6 @@
 // Offline support. Online: always fetch the newest files (so updates show at once) and keep a copy.
 // Offline: use the saved copy. Bump CACHE when the list of core files changes.
-const CACHE = 'town-builder-v6';
+const CACHE = 'town-builder-v7';
 const CORE = [
   './',
   './index.html',
@@ -17,6 +17,7 @@ const CORE = [
   './src/converters.js',
   './src/ui.js',
   './src/upgrades.js',
+  './src/helpers.js',
   './assets/icons/icon-180.png',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',

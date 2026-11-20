@@ -2,11 +2,11 @@
 // When everything it needs is in, the building appears and the next site shows up.
 import * as THREE from 'three';
 import { SITES, DELIVER } from './config.js';
-import { makePad, makeHut, makeWell, makeSawmill, makeMason, makeMarket, ghostOf, makeArrow } from './models.js';
+import { makePad, makeHut, makeWell, makeSawmill, makeMason, makeMarket, makeLodge, ghostOf, makeArrow } from './models.js';
 
 import { ICON, placeLabel } from './ui.js';
 
-const builders = { hut: makeHut, well: makeWell, sawmill: makeSawmill, mason: makeMason, market: makeMarket, gate: null }; // the gate is part of the fence (world.js)
+const builders = { hut: makeHut, well: makeWell, sawmill: makeSawmill, mason: makeMason, market: makeMarket, lodge: makeLodge, gate: null }; // the gate is part of the fence (world.js)
 const tmp = new THREE.Vector3();
 
 export class Sites {
