@@ -1,6 +1,6 @@
 // All the numbers that tune how the game feels. Change values here, not in the code.
 export const CONFIG = {
-  version: 'v0.6 (M6)',
+  version: 'v0.6.1 (new look)',
 
   player: {
     speed: 6,          // metres per second at full joystick

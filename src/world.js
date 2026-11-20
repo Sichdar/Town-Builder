@@ -2,6 +2,7 @@
 // and the trees (wood) and rocks (stone) you can gather from.
 import * as THREE from 'three';
 import { CONFIG, SITES, DELIVER } from './config.js';
+import { buildScenery, roadPoints, roadKeepClear } from './scenery.js';
 import { makeTree, makeRock, makeStump, makePebbles, makeFenceSection, makeFencePost, makeGateDoor } from './models.js';
 
 // Small seeded random generator so the map is the same every time.
@@ -25,22 +26,7 @@ export function buildWorld(scene) {
   const obstacles = []; // { x, z, r } circles the villager can't walk through
   const nodes = [];     // trees and rocks you can gather from (see gather.js)
 
-  const groundMat = new THREE.MeshLambertMaterial({ color: 0x7cc35a });
-  const addGround = (w, d, x, z) => {
-    const g = new THREE.Mesh(new THREE.PlaneGeometry(w, d), groundMat);
-    g.rotation.x = -Math.PI / 2;
-    g.position.set(x, 0, z);
-    g.receiveShadow = true;
-    scene.add(g);
-  };
-  addGround(W.size, W.size, 0, 0);
-  addGround(W.size, W.north.depth, 0, fenceZ - W.north.depth / 2);
-
-  // A darker band all around so the border is visible.
-  const edge = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshLambertMaterial({ color: 0x4f8f3a }));
-  edge.rotation.x = -Math.PI / 2;
-  edge.position.y = -0.02;
-  scene.add(edge);
+  const road = roadPoints(fenceZ);
 
   // ---- Fence with a gate in the middle ----
   const gapHalf = W.gateWidth / 2;
@@ -74,6 +60,7 @@ export function buildWorld(scene) {
   const keepClear = [{ x: 0, z: 0, r: W.clearRadius }];
   for (const s of SITES) keepClear.push({ x: s.x, z: s.z, r: s.clear || DELIVER.padSize + 0.5 });
   for (let z = fenceZ + 6; z > fenceZ - 6; z -= 2) keepClear.push({ x: 0, z, r: 3 });
+  keepClear.push(...roadKeepClear(road));
 
   const rand = rng(W.seed);
   const place = (count, type, make, makeLeftover, radius, amount, area) => {
@@ -107,6 +94,14 @@ export function buildWorld(scene) {
   place(W.rocks, 'stone', makeRock, makePebbles, 0.6, G.stonePerRock, start);
   place(W.north.trees, 'wood', makeTree, makeStump, 0.35, G.woodPerTree, north);
   place(W.north.rocks, 'stone', makeRock, makePebbles, 0.6, G.stonePerRock, north);
+
+  // Ground, road, grass tufts, flowers and the forest edge (looks only).
+  const pads = SITES.map((s) => ({ x: s.x, z: s.z, r: (s.clear || DELIVER.padSize) * 0.75 }));
+  const avoid = (x, z) =>
+    obstacles.some((o) => Math.hypot(o.x - x, o.z - z) < o.r + 0.2) ||
+    pads.some((p) => Math.hypot(p.x - x, p.z - z) < p.r) ||
+    Math.abs(z - fenceZ) < 0.6;
+  buildScenery(scene, { minX: -half, maxX: half, minZ: northEnd, maxZ: half }, road, avoid);
 
   const world = {
     half,

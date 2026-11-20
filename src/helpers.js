@@ -3,7 +3,7 @@
 // stockpile (yellow pad) and goes back for more. Step on the stockpile to load what they brought.
 import * as THREE from 'three';
 import { CONFIG, SITES, HELPERS, DELIVER, CONVERTERS } from './config.js';
-import { makeVillager, makePad, PAD_IN, PAD_OUT, PIECE_HEIGHT } from './models.js';
+import { makeVillager, animateVillager, makePad, PAD_IN, PAD_OUT, PIECE_HEIGHT } from './models.js';
 import { makers } from './gather.js';
 import { ICON, placeLabel } from './ui.js';
 
@@ -206,6 +206,7 @@ export class Helpers {
         if (h.timer >= every) {
           h.timer -= every;
           this.gatherer.chip(n);
+          h.chop = 1;
           const mesh = makers[n.type]();
           h.stack.add(mesh);
           h.carried.push(n.type);
@@ -238,6 +239,9 @@ export class Helpers {
     if (moving) h.walkTime += dt * 14;
     const bob = moving ? Math.abs(Math.sin(h.walkTime)) * 0.1 : 0;
     h.mesh.position.y += (bob - h.mesh.position.y) * Math.min(1, 20 * dt);
+    h.walk = (h.walk || 0) + ((moving ? 1 : 0) - (h.walk || 0)) * Math.min(1, 12 * dt);
+    h.chop = Math.max(0, (h.chop || 0) - dt * 4);
+    animateVillager(h.mesh, h.walkTime, h.walk, h.carried.length > 0, h.chop);
   }
 
   setGoal(h, state) {

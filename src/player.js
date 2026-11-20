@@ -1,6 +1,6 @@
 // The villager you control: walks, turns to face where it goes, bumps into trees, rocks and fences.
 import { CONFIG } from './config.js';
-import { makeVillager } from './models.js';
+import { makeVillager, animateVillager } from './models.js';
 
 export class Player {
   constructor(scene, world) {
@@ -9,6 +9,9 @@ export class Player {
     scene.add(this.mesh);
     this.walkTime = 0;
     this.prevZ = 0;
+    this.walk = 0;       // 0 standing, 1 full speed (smoothed, for the arm and leg swing)
+    this.carrying = false;
+    this.chop = 0;       // counts down after each piece gathered: the arm swings
   }
 
   get position() { return this.mesh.position; }
@@ -37,6 +40,10 @@ export class Player {
     if (moving) this.walkTime += dt * (8 + 6 * speed);
     const bob = moving ? Math.abs(Math.sin(this.walkTime)) * 0.12 * speed : 0;
     pos.y += (bob - pos.y) * Math.min(1, 20 * dt);
+
+    this.walk += ((moving ? speed : 0) - this.walk) * Math.min(1, 12 * dt);
+    this.chop = Math.max(0, this.chop - dt * 4);
+    animateVillager(this.mesh, this.walkTime, this.walk, this.carrying, this.chop);
   }
 
   collide() {

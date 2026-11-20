@@ -63,6 +63,7 @@ export class Gatherer {
 
   take(node) {
     this.chip(node);
+    this.player.chop = 1;
     const h = node.type === 'wood' ? 2 : 0.6;
     this.receive(node.type, tmp.set(node.x, h * node.scale, node.z));
   }

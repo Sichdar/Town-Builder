@@ -16,16 +16,25 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+// Film-like colour handling: softer bright spots, richer colours.
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.0;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x9fd4f0);
-scene.fog = new THREE.Fog(0x9fd4f0, 30, 60);
+scene.background = new THREE.Color(0xa8d8f0);
+scene.fog = new THREE.Fog(0xb9dcea, 28, 58); // far things fade into a light haze
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x5a7a3a, 1.1));
-const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+// Sky light from above (cool blue) and bounce light from the grass below (green),
+// plus a warm late-afternoon sun that casts the shadows.
+scene.add(new THREE.HemisphereLight(0xd6ecff, 0x5d8a3c, 1.0));
+const sun = new THREE.DirectionalLight(0xfff0d0, 2.0);
 sun.castShadow = true;
-sun.shadow.mapSize.set(1024, 1024);
-const S = 14;
+// Sharper shadows on bigger screens; phones keep the lighter setting.
+const big = Math.max(window.innerWidth, window.innerHeight) * Math.min(window.devicePixelRatio, 2) > 1800;
+sun.shadow.mapSize.set(big ? 2048 : 1024, big ? 2048 : 1024);
+sun.shadow.bias = -0.0005;
+sun.shadow.normalBias = 0.03;
+const S = 15;
 Object.assign(sun.shadow.camera, { left: -S, right: S, top: S, bottom: -S, near: 1, far: 50 });
 scene.add(sun, sun.target);
 
@@ -148,6 +157,7 @@ renderer.setAnimationLoop(() => {
   const input = joystick.vector;
   player.update(dt, input);
   gatherer.update(dt, input.x !== 0 || input.z !== 0);
+  player.carrying = gatherer.carried.length > 0;
   sites.update(dt);
   converters.update(dt);
   upgrades.update(dt);
@@ -160,7 +170,7 @@ renderer.setAnimationLoop(() => {
   look.lerp(target.copy(player.position).setY(0.8), k);
   camera.lookAt(look);
 
-  sun.position.copy(player.position).add({ x: 8, y: 16, z: 6 });
+  sun.position.copy(player.position).add({ x: 9, y: 15, z: 4 });
   sun.target.position.copy(player.position);
 
   renderer.render(scene, camera);
