@@ -550,3 +550,86 @@ export function makeLodge() {
   g.add(bench);
   return shadowAll(g);
 }
+
+// ---- M7: houses, iron ore ----
+const M7 = {
+  roofs: [flat(0xb5532f), flat(0x8f6a3e), flat(0x5f7f9a), flat(0xa04a5a), flat(0x6f8a3e)],
+  wall: mat(0xf0e0bc),
+  ore: flat(0x6e6560),
+  oreDark: flat(0x564e4a),
+  vein: flat(0xc8743a),
+  iron: mat(0x8a5a44),
+  ironShine: mat(0xb9b2aa),
+  flower: mat(0xe0566a),
+  box: mat(0x7a4a24),
+};
+
+// A villager's house: like the hut but a little bigger, with a flower box. "style" picks the roof colour.
+export function makeHouse(style = 0) {
+  const g = new THREE.Group();
+  const walls = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.5, 2), M7.wall);
+  walls.position.y = 0.75;
+  g.add(walls);
+  timber(g, 2.2, 1.5, 2);
+  windowOn(g, 'front', -0.6, 0.85, 1);
+  windowOn(g, 'left', 0, 0.85, 1.1);
+  windowOn(g, 'right', 0, 0.85, 1.1);
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 2.5, 3), M7.roofs[style % M7.roofs.length]);
+  roof.rotation.z = Math.PI / 2;
+  roof.rotation.x = -Math.PI / 2;
+  roof.position.y = 1.95; // bottom of the roof sits on the top of the walls (1.5)
+  roof.scale.set(1, 1, 0.8);
+  g.add(roof);
+  const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.3), M.rock);
+  chimney.position.set(0.6, 2.25, -0.4);
+  g.add(chimney);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.05), M3.door);
+  door.position.set(0.45, 0.45, 1.01);
+  g.add(door);
+  const box = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.14), M7.box);
+  box.position.set(-0.6, 0.6, 1.08);
+  g.add(box);
+  for (const x of [-0.75, -0.6, -0.45]) {
+    const f = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), M7.flower);
+    f.position.set(x, 0.7, 1.08);
+    g.add(f);
+  }
+  return shadowAll(g);
+}
+
+// Iron ore rock: dark rock with rusty orange veins.
+export function makeIronRock(scale = 1) {
+  const seed = Math.round(scale * 1000) + 500;
+  const g = new THREE.Group();
+  const rock = new THREE.Mesh(lumpy(new THREE.DodecahedronGeometry(0.7, 1), 0.18, seed), M7.ore);
+  rock.position.y = 0.33;
+  rock.scale.set(1, 0.75, 0.95);
+  rock.rotation.y = seed;
+  g.add(rock);
+  const small = new THREE.Mesh(lumpy(new THREE.DodecahedronGeometry(0.3, 0), 0.15, seed + 3), M7.oreDark);
+  small.position.set(-0.5, 0.14, 0.35);
+  g.add(small);
+  for (let i = 0; i < 6; i++) {
+    const a = hash(seed + i) * Math.PI * 2;
+    const y = 0.2 + hash(seed + i * 7) * 0.45;
+    const r = 0.62 - (y - 0.2) * 0.5;
+    const v = new THREE.Mesh(new THREE.DodecahedronGeometry(0.11, 0), M7.vein);
+    v.position.set(Math.cos(a) * r, y, Math.sin(a) * r);
+    g.add(v);
+  }
+  g.scale.setScalar(scale);
+  return shadowAll(g);
+}
+
+// A lump of iron ore you carry, 0.2 tall like the other pieces.
+const oreGeo = new THREE.DodecahedronGeometry(0.17, 0);
+export function makeIronOre() {
+  const g = new THREE.Group();
+  const a = new THREE.Mesh(oreGeo, M7.iron);
+  a.scale.set(1.4, 0.6, 1);
+  g.add(a);
+  const b = new THREE.Mesh(new THREE.DodecahedronGeometry(0.07, 0), M7.ironShine);
+  b.position.set(0.12, 0.06, 0.05);
+  g.add(b);
+  return shadowAll(g);
+}

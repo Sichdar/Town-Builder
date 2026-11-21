@@ -2,11 +2,17 @@
 // When everything it needs is in, the building appears and the next site shows up.
 import * as THREE from 'three';
 import { SITES, DELIVER } from './config.js';
-import { makePad, makeHut, makeWell, makeSawmill, makeMason, makeMarket, makeLodge, ghostOf, makeArrow } from './models.js';
+import { makePad, makeHut, makeWell, makeSawmill, makeMason, makeMarket, makeLodge, makeHouse, ghostOf, makeArrow } from './models.js';
 
 import { ICON, placeLabel } from './ui.js';
 
-const builders = { hut: makeHut, well: makeWell, sawmill: makeSawmill, mason: makeMason, market: makeMarket, lodge: makeLodge, gate: null }; // the gate is part of the fence (world.js)
+// Each house gets its own roof colour, picked from its number (house1, house2...).
+const houseStyle = (def) => Number(def.id.replace(/\D/g, '')) || 0;
+const builders = {
+  hut: makeHut, well: makeWell, sawmill: makeSawmill, mason: makeMason, market: makeMarket, lodge: makeLodge,
+  house: (def) => makeHouse(houseStyle(def)),
+  gate: null, egate: null, // gates are part of the fences (world.js)
+};
 const tmp = new THREE.Vector3();
 
 export class Sites {
@@ -29,7 +35,7 @@ export class Sites {
       site.group = new THREE.Group();
       site.group.position.set(def.x, 0, def.z);
       site.group.add(makePad(DELIVER.padSize));
-      if (builders[def.builds]) site.group.add(ghostOf(builders[def.builds]()));
+      if (builders[def.builds]) site.group.add(ghostOf(builders[def.builds](def)));
       site.group.visible = false;
       scene.add(site.group);
 
@@ -135,10 +141,9 @@ export class Sites {
     s.group.clear();
     s.group.visible = true;
     const make = builders[s.def.builds];
-    if (make) s.group.add(make());
-    if (s.def.builds === 'gate') {
-      this.world.openGate(instant);
-    }
+    if (make) s.group.add(make(s.def));
+    if (s.def.builds === 'gate') this.world.openGate('north', instant);
+    if (s.def.builds === 'egate') this.world.openGate('east', instant);
     // Buildings are solid.
     if (make) this.world.obstacles.push({ x: s.def.x, z: s.def.z, r: 1.2 });
     s.pop = instant ? 1 : 0;

@@ -263,7 +263,7 @@ export class Helpers {
     let best = null;
     let bestD = Infinity;
     for (const n of this.world.nodes) {
-      if (n.type !== h.job || n.amount <= 0) continue;
+      if (n.type !== h.job || n.amount <= 0 || n.area === 'east') continue; // helpers stay out of the iron area
       if (n.claimedBy && n.claimedBy !== h) continue;
       if (!fence.open && n.z < fence.z) continue;
       const d = Math.hypot(n.x - p.x, n.z - p.z) + (n.z < fence.z ? 8 : 0); // prefer this side of the fence

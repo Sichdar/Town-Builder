@@ -28,25 +28,31 @@ function noise2(x, z) {
   return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
 }
 
-// The dirt road: a line of points. Returns how far (x, z) is from it.
-function distToRoad(road, x, z) {
+// The dirt roads: each is a line of points. Returns how far (x, z) is from the nearest one.
+function distToRoad(roads, x, z) {
   let best = Infinity;
-  for (let i = 0; i < road.length - 1; i++) {
-    const [ax, az] = road[i], [bx, bz] = road[i + 1];
-    const dx = bx - ax, dz = bz - az;
-    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz)));
-    best = Math.min(best, Math.hypot(x - (ax + t * dx), z - (az + t * dz)));
+  for (const road of roads) {
+    for (let i = 0; i < road.length - 1; i++) {
+      const [ax, az] = road[i], [bx, bz] = road[i + 1];
+      const dx = bx - ax, dz = bz - az;
+      const t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz)));
+      best = Math.min(best, Math.hypot(x - (ax + t * dx), z - (az + t * dz)));
+    }
   }
   return best;
 }
 
-// The road, plus circles to keep trees and rocks off it (used by world.js before placing them).
-export function roadPoints(fenceZ) {
-  return [[0, 3.4], [0, 0], [0.4, -8], [-0.3, -16], [0, fenceZ], [0, fenceZ - 5], [-3, fenceZ - 8]];
+// The roads (north to the gate, and the M7 branch east to the iron area), plus circles to keep
+// trees and rocks off them (used by world.js before placing them).
+export function roadPoints(fenceZ, eastX) {
+  return [
+    [[0, 3.4], [0, 0], [0.4, -8], [-0.3, -16], [0, fenceZ], [0, fenceZ - 5], [-3, fenceZ - 8]],
+    [[0.2, -4], [8, -3.2], [15, -1], [eastX, 0], [eastX + 6, 0.6], [eastX + 9, 3]],
+  ];
 }
-export function roadKeepClear(road, r = 1.8) {
+export function roadKeepClear(roads, r = 1.8) {
   const out = [];
-  for (let i = 0; i < road.length - 1; i++) {
+  for (const road of roads) for (let i = 0; i < road.length - 1; i++) {
     const [ax, az] = road[i], [bx, bz] = road[i + 1];
     const steps = Math.ceil(Math.hypot(bx - ax, bz - az) / 1.5);
     for (let k = 0; k <= steps; k++) out.push({ x: ax + (bx - ax) * k / steps, z: az + (bz - az) * k / steps, r });
@@ -62,12 +68,24 @@ const C = {
   dirtEdge: new THREE.Color(0xa5b85a),
 };
 
-// minX..maxX, minZ..maxZ: the playable ground. avoid(x, z) says where tufts and flowers must not go.
-export function buildScenery(scene, b, road, avoid, seed = 11) {
+// areas: the playable rectangles { minX, maxX, minZ, maxZ }. avoid(x, z) says where tufts and flowers must not go.
+export function buildScenery(scene, areas, road, avoid, seed = 11) {
   const rand = rng(seed);
+  // The box around all areas, and how far a spot is outside the playable ground (0 = on it).
+  const b = {
+    minX: Math.min(...areas.map((a) => a.minX)), maxX: Math.max(...areas.map((a) => a.maxX)),
+    minZ: Math.min(...areas.map((a) => a.minZ)), maxZ: Math.max(...areas.map((a) => a.maxZ)),
+  };
   const w = b.maxX - b.minX, d = b.maxZ - b.minZ;
+  const outside = (x, z) => Math.min(...areas.map((a) => Math.max(a.minX - x, x - a.maxX, a.minZ - z, z - a.maxZ, 0)));
 
-  // ---- Ground: one big sheet, coloured corner by corner ----
+  for (const a of areas) buildGround(scene, a, road);
+  buildDetails(scene, b, w, d, rand, road, avoid, outside);
+}
+
+// ---- Ground: one sheet per area, coloured corner by corner ----
+function buildGround(scene, b, road) {
+  const w = b.maxX - b.minX, d = b.maxZ - b.minZ;
   const geo = new THREE.PlaneGeometry(w, d, Math.round(w / 0.8), Math.round(d / 0.8));
   geo.rotateX(-Math.PI / 2);
   geo.translate((b.minX + b.maxX) / 2, 0, (b.minZ + b.maxZ) / 2);
@@ -89,7 +107,9 @@ export function buildScenery(scene, b, road, avoid, seed = 11) {
   const ground = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }));
   ground.receiveShadow = true;
   scene.add(ground);
+}
 
+function buildDetails(scene, b, w, d, rand, road, avoid, outside) {
   // Forest floor all around, darker.
   const edge = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshLambertMaterial({ color: 0x447c36 }));
   edge.rotation.x = -Math.PI / 2;
@@ -102,7 +122,7 @@ export function buildScenery(scene, b, road, avoid, seed = 11) {
   const e = new THREE.Euler();
   const v = new THREE.Vector3();
   const s = new THREE.Vector3();
-  const free = (x, z) => !avoid(x, z) && distToRoad(road, x, z) > 1.7;
+  const free = (x, z) => outside(x, z) === 0 && !avoid(x, z) && distToRoad(road, x, z) > 1.7;
 
   // ---- Grass tufts: three thin blades each ----
   const blade = new THREE.ConeGeometry(0.06, 0.38, 3);
@@ -150,12 +170,11 @@ export function buildScenery(scene, b, road, avoid, seed = 11) {
   // ---- Forest around the edge: pines in a thick band, never inside the playable ground ----
   const spots = [];
   const band = 10;
-  for (let tries = 0; spots.length < 520 && tries < 6000; tries++) {
+  // More spots now that the map has an east part and an empty corner to fill.
+  for (let tries = 0; spots.length < 760 && tries < 9000; tries++) {
     const x = b.minX - band + rand() * (w + band * 2);
     const z = b.minZ - band + rand() * (d + band * 2);
-    const outX = Math.max(b.minX - x, x - b.maxX, 0);
-    const outZ = Math.max(b.minZ - z, z - b.maxZ, 0);
-    const out = Math.max(outX, outZ);
+    const out = outside(x, z);
     if (out < 0.9) continue;
     if (spots.some((p) => Math.hypot(p.x - x, p.z - z) < 1.6)) continue;
     spots.push({ x, z, size: 0.9 + rand() * 0.7 + Math.min(out, 6) * 0.06, turn: rand() * 6, shade: rand() });

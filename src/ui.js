@@ -7,6 +7,7 @@ export const ICON = {
   plank: '<span class="ico plank"></span>',
   block: '<span class="ico block"></span>',
   coin: '<span class="ico coin"></span>',
+  iron: '<span class="ico iron"></span>',
 };
 
 const v = new THREE.Vector3();

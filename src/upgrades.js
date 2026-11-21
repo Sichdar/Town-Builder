@@ -62,6 +62,7 @@ export class Upgrades {
     this.gatherer.speedFor = {
       wood: Math.pow(UPGRADES.toolStep, L.axe),
       stone: Math.pow(UPGRADES.toolStep, L.pick),
+      iron: 1.5 * Math.pow(UPGRADES.toolStep, L.pick), // iron ore is harder: 1.5 times slower than stone
     };
     if (this.gatherer.onChange) this.gatherer.onChange();
   }
@@ -87,7 +88,7 @@ export class Upgrades {
   // ---- Backpack: drop pieces ----
 
   drawBag() {
-    const types = ['wood', 'stone', 'plank', 'block'];
+    const types = ['wood', 'stone', 'plank', 'block', 'iron'];
     const rows = types.map((t) => {
       const n = this.gatherer.count(t);
       if (!n) return '';

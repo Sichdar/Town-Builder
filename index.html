@@ -130,6 +130,14 @@
     .pips { display: flex; gap: 3px; margin-top: 4px; }
     .pips i { width: 14px; height: 6px; border-radius: 3px; background: #e0d0ac; }
     .pips i.on { background: #2e8b3a; }
+    /* M7: iron and the town level */
+    .ico.iron { background: radial-gradient(circle at 60% 35%, #d8cfc6, #8a5a44 45%, #5a3a2c); border-radius: 5px 7px 4px 6px; }
+    #town {
+      position: fixed; right: calc(10px + env(safe-area-inset-right)); top: calc(56px + env(safe-area-inset-top));
+      font-size: 15px; pointer-events: none;
+    }
+    #town.hide { display: none; }
+    #town .lv { background: #3f6fa0; color: #fff; font-size: 12px; padding: 1px 7px; border-radius: 9px; }
     .panel .empty, .panel .note { margin: 8px 0 0; font-size: 13px; opacity: 0.7; text-align: center; }
   </style>
 </head>
@@ -142,9 +150,11 @@
     <div class="pill" data-type="stone"><span class="ico stone"></span><span>0</span></div>
     <div class="pill hide" data-type="plank"><span class="ico plank"></span><span>0</span></div>
     <div class="pill hide" data-type="block"><span class="ico block"></span><span>0</span></div>
+    <div class="pill hide" data-type="iron"><span class="ico iron"></span><span>0</span></div>
     <div class="pill ui btn" id="bagBtn">🎒 <span id="load">0/10</span></div>
   </div>
   <div id="coins" class="pill hide ui btn"><span class="ico coin"></span><span id="coinCount">0</span><span class="shop-tag">Shop</span></div>
+  <div id="town" class="pill hide"><span id="townName">Hamlet</span><span class="lv" id="townLv">1</span><span id="townPeople">👥 0</span></div>
   <div id="full">Back is full!</div>
   <div id="labels"></div>
   <div id="toast"></div>

@@ -2,9 +2,9 @@
 // Cut trees and used rocks leave a stump or pebbles, then grow back.
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
-import { makeLog, makeStone, makePlank, makeBlock, PIECE_HEIGHT } from './models.js';
+import { makeLog, makeStone, makePlank, makeBlock, makeIronOre, PIECE_HEIGHT } from './models.js';
 
-export const makers = { wood: makeLog, stone: makeStone, plank: makePlank, block: makeBlock };
+export const makers = { wood: makeLog, stone: makeStone, plank: makePlank, block: makeBlock, iron: makeIronOre };
 const tmp = new THREE.Vector3();
 
 export class Gatherer {

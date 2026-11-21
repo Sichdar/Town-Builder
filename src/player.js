@@ -9,6 +9,7 @@ export class Player {
     scene.add(this.mesh);
     this.walkTime = 0;
     this.prevZ = 0;
+    this.prevX = 0;
     this.walk = 0;       // 0 standing, 1 full speed (smoothed, for the arm and leg swing)
     this.carrying = false;
     this.chop = 0;       // counts down after each piece gathered: the arm swings
@@ -21,6 +22,7 @@ export class Player {
     const pos = this.mesh.position;
     const moving = input.x !== 0 || input.z !== 0;
     this.prevZ = pos.z;
+    this.prevX = pos.x;
 
     if (moving) {
       pos.x += input.x * P.speed * dt;
@@ -61,17 +63,32 @@ export class Player {
     }
 
     // Fences: can't cross, except through an open gate.
+    // The north fence runs along x (axis 'z'), the east fence along z (axis 'x').
     for (const f of this.world.fences) {
-      const inGap = f.open && Math.abs(pos.x - f.gapX) < f.gapHalf - r * 0.5;
+      const alongZ = f.axis === 'x';
+      const along = alongZ ? pos.z : pos.x;
+      const across = alongZ ? pos.x : pos.z;
+      const prev = alongZ ? this.prevX : this.prevZ;
+      if (along < f.from - r || along > f.to + r) continue;
+      const inGap = f.open && Math.abs(along - f.gap) < f.gapHalf - r * 0.5;
       if (inGap) continue;
       const lim = r + 0.12;
-      if (Math.abs(pos.z - f.z) < lim) {
-        const side = this.prevZ >= f.z ? 1 : -1; // stay on the side you came from
-        pos.z = f.z + side * lim;
+      if (Math.abs(across - f.at) < lim) {
+        const side = prev >= f.at ? 1 : -1; // stay on the side you came from
+        if (alongZ) pos.x = f.at + side * lim;
+        else pos.z = f.at + side * lim;
       }
     }
 
-    const b = this.world.bounds;
+    // Stay on the playable ground (the start, north and east areas). If a step would leave it,
+    // keep the part of the step that stays on it, so you slide along the edge.
+    const w = this.world;
+    if (!w.fits(pos.x, pos.z, r)) {
+      if (w.fits(pos.x, this.prevZ, r)) pos.z = this.prevZ;
+      else if (w.fits(this.prevX, pos.z, r)) pos.x = this.prevX;
+      else if (w.fits(this.prevX, this.prevZ, r)) { pos.x = this.prevX; pos.z = this.prevZ; }
+    }
+    const b = w.bounds;
     pos.x = Math.max(b.minX + r, Math.min(b.maxX - r, pos.x));
     pos.z = Math.max(b.minZ + r, Math.min(b.maxZ - r, pos.z));
   }

@@ -9,6 +9,7 @@ import { Sites } from './sites.js';
 import { Converters } from './converters.js';
 import { Upgrades } from './upgrades.js';
 import { Helpers } from './helpers.js';
+import { Town } from './town.js';
 import { loadSave, startSaving, resetSave } from './save.js';
 
 const canvas = document.getElementById('game');
@@ -64,7 +65,7 @@ function showLoad() {
     const n = gatherer.count(type);
     p.lastElementChild.textContent = n;
     // Planks and blocks only show while you carry some, to keep the bar short on a phone.
-    if (type === 'plank' || type === 'block') p.classList.toggle('hide', n === 0);
+    if (type === 'plank' || type === 'block' || type === 'iron') p.classList.toggle('hide', n === 0);
   }
   hud.load.textContent = `${gatherer.carried.length}/${CONFIG.gather.stackMax}`;
   hud.full.classList.toggle('on', gatherer.full);
@@ -75,13 +76,24 @@ gatherer.onChange = showLoad;
 
 // Build sites, the toast when something is built, and saving.
 const sites = new Sites(scene, world, player, gatherer, camera);
+// Big messages in the middle of the screen, one after another.
 const toast = document.getElementById('toast');
-let toastTimer = 0;
-sites.onBuilt = (s) => {
-  toast.textContent = s.def.builds === 'gate' ? 'The north gate is open!' : `${s.def.name} built!`;
+const toasts = [];
+let toastBusy = false;
+function say(text) {
+  toasts.push(text);
+  if (!toastBusy) nextToast();
+}
+function nextToast() {
+  if (!toasts.length) { toastBusy = false; return; }
+  toastBusy = true;
+  toast.textContent = toasts.shift();
   toast.classList.add('on');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('on'), 2200);
+  setTimeout(() => { toast.classList.remove('on'); setTimeout(nextToast, 300); }, 2200);
+}
+const BUILT_TEXT = { gate: 'The north gate is open!', egate: 'The east gate is open! Iron ahead' };
+sites.onBuilt = (s) => {
+  say(BUILT_TEXT[s.def.builds] || (s.def.builds === 'house' ? 'House built! New villagers' : `${s.def.name} built!`));
   showCoins();
 };
 
@@ -103,10 +115,15 @@ upgrades = new Upgrades(scene, player, gatherer, converters);
 helpers = new Helpers(scene, world, player, gatherer, sites, converters, camera);
 helpers.onOpen = () => joystick.release();
 
+// The town: villagers from houses, the town level and rent.
+const town = new Town(scene, world, sites, converters, camera);
+town.onLevelUp = (l, lv) => say(`Town level ${lv}: ${l.name}!`);
+
 const saved = loadSave();
 if (saved) {
   upgrades.restore(saved.upgrades); // first, so a bigger backpack fits the saved stack
   sites.restore(saved.sites);
+  town.restore();
   converters.restore(saved.converters);
   helpers.restore(saved.helpers);
   gatherer.restore(saved.carried);
@@ -125,7 +142,7 @@ showLoad();
 showCoins();
 
 // For testing from the browser console.
-window.game = { player, gatherer, world, sites, converters, upgrades, helpers, camera, saveNow, reset: resetSave, render: () => renderer.render(scene, camera) };
+window.game = { player, gatherer, world, sites, converters, upgrades, helpers, town, camera, saveNow, reset: resetSave, render: () => renderer.render(scene, camera) };
 
 // Camera starts in place, then follows smoothly.
 const offset = new THREE.Vector3(C.offset.x, C.offset.y, C.offset.z);
@@ -162,6 +179,7 @@ renderer.setAnimationLoop(() => {
   converters.update(dt);
   upgrades.update(dt);
   helpers.update(dt);
+  town.update(dt);
   world.update(dt);
 
   const k = 1 - Math.exp(-C.follow * dt);
